@@ -2,7 +2,7 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 from datetime import datetime, time
-import cv2
+#import cv2
 import numpy as np
 import plotly.express as px
 from streamlit_geolocation import streamlit_geolocation
