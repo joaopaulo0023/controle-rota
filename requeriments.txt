@@ -1,0 +1,6 @@
+streamlit
+pandas
+opencv-python
+numpy
+plotly
+streamlit-geolocation
