@@ -2,6 +2,7 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 from datetime import datetime, time
+from zoneinfo import ZoneInfo
 import cv2
 import numpy as np
 import plotly.express as px
@@ -14,6 +15,7 @@ import math
 
 CODIGO_ADMIN = "123456"
 TOLERANCIA_MINUTOS = 4
+TZ = ZoneInfo("America/Sao_Paulo")
 
 st.set_page_config(layout="wide")
 st.title("🚛 Controle de Rotas")
@@ -80,14 +82,15 @@ conn.commit()
 # =========================
 
 def filtro_data():
-    hoje = datetime.now().date()
+    agora = datetime.now(TZ)
+    hoje = agora.date()
     data_escolhida = st.date_input("📅 Filtrar por data", value=hoje)
-    data_inicio = datetime.combine(data_escolhida, time.min)
-    data_fim = datetime.combine(data_escolhida, time.max)
+    data_inicio = datetime.combine(data_escolhida, time.min).replace(tzinfo=TZ)
+    data_fim = datetime.combine(data_escolhida, time.max).replace(tzinfo=TZ)
     return data_inicio, data_fim, data_escolhida
 
 def turno_atual():
-    agora = datetime.now().time()
+    agora = datetime.now(TZ).time()
     if time(6,0) <= agora < time(15,10):
         return "A","1º Turno"
     elif time(15,10) <= agora < time(23,20):
@@ -184,7 +187,6 @@ else:
         data_inicio, data_fim, data_label = filtro_data()
         turno_db, turno_nome = turno_atual()
 
-        # 🔥 ROTAS EM EXPANDER
         with st.expander(f"📍 Rotas do {turno_nome}", expanded=True):
 
             horarios = pd.read_sql_query("""
@@ -198,7 +200,6 @@ else:
 
             st.dataframe(horarios,use_container_width=True)
 
-        # 🔥 REGISTROS EM EXPANDER
         with st.expander(f"📋 Seus registros - {data_label}", expanded=True):
 
             registros_motorista = pd.read_sql_query("""
@@ -216,10 +217,6 @@ else:
 
             st.dataframe(registros_motorista, use_container_width=True)
 
-        # =========================
-        # LOCALIZAÇÃO
-        # =========================
-
         st.subheader("📍 Sua localização")
 
         location = streamlit_geolocation()
@@ -231,10 +228,6 @@ else:
             st.success(f"Local capturado: {lat}, {lon}")
         else:
             st.warning("📍 Permita a localização e aguarde alguns segundos")
-
-        # =========================
-        # REGISTRO AUTOMÁTICO
-        # =========================
 
         st.subheader("Registrar chegada")
 
@@ -269,7 +262,7 @@ else:
             local_id = local[0]
             nome_local = local[1]
 
-            agora = datetime.now()
+            agora = datetime.now(TZ)
 
             if st.session_state.ultimo_registro:
                 if (agora - st.session_state.ultimo_registro).seconds < 60:
@@ -299,7 +292,8 @@ else:
                     h_prev = h_prev.replace(
                         year=agora.year,
                         month=agora.month,
-                        day=agora.day
+                        day=agora.day,
+                        tzinfo=TZ
                     )
 
                     dif = (agora - h_prev).total_seconds() / 60
@@ -327,6 +321,7 @@ else:
 
             st.success(f"✔ Registro salvo no {nome_local} - {status}")
             st.rerun()
+
 # =========================
 # ADMIN
 # =========================
@@ -340,7 +335,6 @@ else:
 
         st.header("Painel Administrativo")
 
-        # 🔥 BUSCAR MOTORISTAS
         motoristas = pd.read_sql_query(
             "SELECT DISTINCT motorista FROM registros_rota",
             conn
@@ -350,7 +344,6 @@ else:
 
         motorista_filtro = st.selectbox("🚛 Filtrar por motorista", lista_motoristas)
 
-        # 🔥 QUERY DINÂMICA
         if motorista_filtro == "Todos":
             query = """
             SELECT locais.nome_local, registros_rota.data_hora,
@@ -383,7 +376,6 @@ else:
 
         st.dataframe(registros,use_container_width=True)
 
-        # 🔥 DASHBOARD FILTRADO
         with st.expander("📊 Dashboard de atrasos"):
 
             if not registros.empty:
@@ -405,10 +397,6 @@ else:
                 )
 
                 st.plotly_chart(fig,use_container_width=True)
-
-        # =========================
-        # EDITOR
-        # =========================
 
         st.subheader("🛠️ Editor do Banco")
 
