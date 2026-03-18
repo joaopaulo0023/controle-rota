@@ -252,7 +252,7 @@ else:
 
                 distancia = calcular_distancia(lat, lon, LAT_GALPAO, LON_GALPAO)
 
-                if distancia <= 100:
+                if distancia <= 30:
 
                     cursor.execute(
                         "SELECT id, nome_local FROM locais WHERE nome_local=?",
