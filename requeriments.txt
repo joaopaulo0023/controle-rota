@@ -1,6 +1,6 @@
-streamlit
-pandas
-opencv-python-headless
-numpy
-plotly>=5.0.0
-streamlit-geolocation
+streamlit==1.32.0
+pandas==2.2.2
+numpy==1.26.4
+plotly==5.19.0
+opencv-python-headless==4.9.0.80
+streamlit-geolocation==0.0.10
