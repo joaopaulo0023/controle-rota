@@ -3,10 +3,11 @@ import sqlite3
 import pandas as pd
 from datetime import datetime, time
 from zoneinfo import ZoneInfo
+import cv2
 import numpy as np
 import plotly.express as px
+from streamlit_geolocation import streamlit_geolocation
 import math
-
 # =========================
 # CONFIG
 # =========================
@@ -295,6 +296,14 @@ else:
                     st.error("❌ GPS falhou")
                 st.rerun()
         
+
+        st.subheader("📍 Sua localização")
+
+        location = streamlit_geolocation()
+
+        lat = location.get("latitude") if location else None
+        lon = location.get("longitude") if location else None
+
         lat = st.session_state.lat
         lon = st.session_state.lon
 
@@ -342,8 +351,8 @@ else:
                     if st.button(f"🚛 **REGISTRAR {nome_local_registro}** ✅", 
                                type="primary", use_container_width=True):
                         registrar_chegada(nome_local_registro, turno_db)
-        else:
-            st.error("❌ Aproxime-se (30m) + capture GPS")
+        
+            
 
         # Expanders
         with st.expander(f"📋 Rotas {turno_nome}"):
